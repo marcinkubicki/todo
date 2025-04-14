@@ -4,55 +4,55 @@ const TaskDescription = () => {
          <header className="space-y-2">
             <h1 className="text-3xl font-bold text-gray-800">📝 Todo List – Live Code Interview Task</h1>
             <p className="text-gray-600 text-lg">
-               Twoim zadaniem jest stworzenie interaktywnej listy zadań w React z integracją z zewnętrznym API oraz
-               prostymi optymalizacjami renderowania.
+               Zbuduj interaktywną aplikację zarządzania zadaniami w <strong>React + TypeScript</strong> z integracją z
+               API.
             </p>
          </header>
 
          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-700">🎯 Wymagania funkcjonalne</h2>
+            <h2 className="text-xl font-semibold text-gray-700">🎯 Główne funkcjonalności</h2>
             <ul className="list-disc pl-6 text-gray-700 space-y-2">
                <li>
-                  🌐 Pobieranie zadań z <code>https://jsonplaceholder.typicode.com/todos</code>.
+                  🌐 Pobierz listę zadań z{' '}
+                  <a
+                     href="https://jsonplaceholder.typicode.com/todos"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="text-blue-600 underline"
+                  >
+                     JSONPlaceholder
+                  </a>{' '}
+                  (limituj do 10-15 zadań).
                </li>
-               <li>
-                  ➕ Dodawanie zadań przez input i przycisk „Add” – wysyłane jako <code>POST</code>.
-               </li>
-               <li>
-                  🗑️ Usuwanie zadań poprzez <code>DELETE</code> – każde zadanie ma przycisk „Delete”.
-               </li>
-               <li>
-                  🧠 Stan komponentu: <code>tasks</code> (lista zadań) i <code>newTask</code> (tekst z inputa).
-               </li>
-               <li>
-                  💡 Każde zadanie musi mieć unikalne <code>id</code> (API zapewnia to automatycznie).
-               </li>
-               <li>✅ Input powinien czyścić się po dodaniu zadania.</li>
+               <li>➕ Dodawanie nowych zadań (input + przycisk „Add”, metoda POST).</li>
+               <li>🗑️ Usuwanie zadań (przycisk „Delete”, metoda DELETE).</li>
+               <li>✅ Zmiana statusu zadania (checkbox, metoda PATCH/PUT).</li>
+               <li>🔄 Obsługa stanów API (ładowanie, błędy, wskaźniki operacji).</li>
             </ul>
          </section>
 
          <section className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-700">⚙️ Optymalizacje</h2>
+            <h2 className="text-xl font-semibold text-gray-700">✨ Bonusowe możliwości</h2>
             <ul className="list-disc pl-6 text-gray-700 space-y-2">
+               <li>⚡️ Optymistyczne aktualizacje i rollback w razie błędów.</li>
+               <li>📣 Powiadomienia użytkownika (np. z react-toastify, Sonner).</li>
+               <li>💠 Skeletony ładowania zamiast zwykłego „Loading...”.</li>
                <li>
-                  🧩 Komponent zadania opakowany w <code>React.memo</code>.
+                  🎨 Stylowanie z użyciem <strong>Tailwind CSS</strong> + komponenty <strong>shadcn/ui</strong>.
                </li>
+               <li>✅ Obsługa dostępności (a11y): semantyczny HTML, ARIA, obsługa klawiatury.</li>
                <li>
-                  ⚡️ Memoizacja funkcji z <code>useCallback</code>.
-               </li>
-               <li>
-                  🧮 Lista zadań generowana z <code>useMemo</code>.
+                  🧾 Obsługa formularza z <code className="bg-gray-100 rounded p-1">React Hook Form</code>.
                </li>
             </ul>
          </section>
 
-         <section className="space-y-2">
-            <h2 className="text-xl font-semibold text-gray-700">✨ Bonusy</h2>
-            <p className="text-gray-700">
-               Styluj z pomocą <strong>Tailwind CSS</strong> i użyj gotowych komponentów z <strong>shadcn/ui</strong>{' '}
-               aby zbudować nowoczesny UI.
+         <footer className="text-sm text-gray-400">
+            <p>
+               ℹ️ Backend: API <code className="bg-gray-100 rounded p-1">JSONPlaceholder</code> jest tylko symulacją –
+               operacje POST/DELETE/PATCH nie zapisują trwale danych.
             </p>
-         </section>
+         </footer>
       </div>
    )
 }
