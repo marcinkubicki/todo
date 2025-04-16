@@ -91,6 +91,7 @@ const TaskList = ({
                                 <IconButton
                                    edge="end"
                                    onClick={() => handleEdit(todo.id, todo.title)}
+                                   disabled={editedTaskId !== null && editedTaskId !== todo.id}
                                    aria-label={strings.edit}
                                 >
                                     <Edit />
@@ -100,6 +101,7 @@ const TaskList = ({
                                 <IconButton
                                    edge="end"
                                    onClick={() => handleDelete(todo.id)}
+                                   disabled={editedTaskId !== null && editedTaskId !== todo.id}
                                    aria-label={strings.delete}
                                 >
                                     <Delete />
@@ -116,6 +118,7 @@ const TaskList = ({
                          onChange={() => handleToggle(todo)}
                          aria-checked={todo.completed ? "true" : "false"}
                          aria-labelledby={`checkbox-${todo.id}`}
+                         disabled={editedTaskId !== null && editedTaskId !== todo.id}
                       />
                   </ListItemIcon>
                   {editedTaskId === todo.id ? (
