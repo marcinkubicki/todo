@@ -1,9 +1,9 @@
-import TaskDescription from './TaskDescription'
+import { Todo } from "@/components/Todo";
 
 function App() {
    return (
-      <main className="h-full flex items-center justify-center bg-gray-100">
-         <TaskDescription />
+      <main className="h-full flex flex-col justify-center items-center p-8">
+         <Todo />
       </main>
    )
 }
