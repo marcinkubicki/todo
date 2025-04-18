@@ -1,115 +1,130 @@
-import { useEffect, useState } from 'react';
-import { Container, Typography} from '@mui/material';
-import { ERROR_MESSAGES, TEXT } from "@/constants/constants.ts";
-import TaskInput from './TaskInput';
-import TaskList from './TaskList';
+import { useState } from "react";
+import {
+    Alert,
+    Collapse,
+    Container,
+    Paper,
+    Snackbar,
+    Typography,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { useTodos } from "@/hooks/useTodos";
+import { TTask } from "@/types/todo";
+import { strings } from "@/constants/strings";
+import { ITEMS_PER_PAGE } from "@/constants/constants";
+import ListSkeleton from "./../ui/listSkeleton";
+import TaskInput from "./taskInput";
+import TaskList from "./taskList";
 
-export type TTodo = {
-    id: number;
-    completed: boolean;
-    title: string;
-    userId: number;
-};
+const StyledAlert = styled(Alert)(({ theme }) => ({
+    marginBottom: theme.spacing(2),
+}));
 
-const userId = 18;
+const StyledPaper = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(4),
+}));
 
-const ToDoList = () => {
-    const [tasks, setTasks] = useState<TTodo[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+const Todo = () => {
     const [newTask, setNewTask] = useState('');
     const [editedTaskId, setEditedTaskId] = useState<number | null>(null);
     const [editText, setEditText] = useState('');
 
-    useEffect(() => {
-        async function getList() {
-            setIsLoading(true);
-            try {
-                const response = await fetch('https://jsonplaceholder.typicode.com/todos', {
-                    method: 'GET',
-                });
+    const {
+        tasks,
+        isLoading,
+        error,
+        successMessage,
+        setError,
+        setSuccessMessage,
+        handleAdd,
+        handleUpdate,
+        handleDelete
+    } = useTodos();
 
-                if (!response.ok) {
-                    throw new Error(ERROR_MESSAGES.FETCH_LIST_FAILED);
-                }
-
-                const data = await response.json();
-                const limitedData = data.slice(0, 15);
-
-                setTasks(limitedData);
-                setIsLoading(false);
-            } catch (error) {
-                throw new Error(`${error} - Failed to get list`);
-            }
+    const handleAddTask = async () => {
+        if (newTask.trim()) {
+            await handleAdd(newTask);
+            setNewTask('');
         }
-
-        getList();
-    }, []);
-
-    const handleAddTodo = () => {
-        if (newTask.trim() === '') return;
-
-        const newItem = {
-            id: Date.now() + userId,
-            title: newTask,
-            completed: false,
-            userId: userId,
-        };
-
-        setTasks((prev) => [newItem, ...prev]);
-        setNewTask('');
     };
 
-    const handleEdit = (id: number, title: string) => {
-        setEditedTaskId(id);
-        setEditText(title);
-    };
+    const handleSaveEdit = async (task: TTask) => {
+        if (!editText.trim()) return;
 
-    const handleSaveEdit = (id: number) => {
-        setTasks((prev) =>
-            prev.map((todo) =>
-                todo.id === id ? { ...todo, title: editText } : todo
-            )
-        );
+        await handleUpdate(task.id, { title: editText });
         setEditedTaskId(null);
         setEditText('');
     };
 
-    const handleToggle = (id: number) => {
-        setTasks((prev) =>
-            prev.map((todo) =>
-                todo.id === id ? { ...todo, completed: !todo.completed } : todo
-            )
-        );
+    const handleToggle = async (task: TTask) => {
+        await handleUpdate(task.id, { completed: !task.completed });
     };
 
-    const handleDelete = (id: number) => {
-        setTasks((prev) => prev.filter((todo) => todo.id !== id));
-    };
+    const handleCancel = () => {
+        setEditedTaskId(null);
+        setEditText('');
+    }
+    const handleEdit = (id: number, title: string) => {
+        setEditedTaskId(id);
+        setEditText(title);
+    }
 
     return (
-        <Container maxWidth="sm">
-            <Typography variant="h4" gutterBottom>{TEXT.TITLE}</Typography>
+        <Container maxWidth="md" >
+            <StyledPaper elevation={4}>
+                <Typography variant="h4" component="h1" gutterBottom>
+                    {strings.todoList}
+                </Typography>
 
-            <TaskInput
-                newTask={newTask}
-                setNewTask={setNewTask}
-                handleAddTodo={handleAddTodo}
-            />
+                <Collapse in={!!error}>
+                    {error && (
+                        <StyledAlert severity="error" onClose={() => setError('')}>
+                            {error}
+                        </StyledAlert>
+                    )}
+                </Collapse>
 
-            <TaskList
-                tasks={tasks}
-                isLoading={isLoading}
-                editedTaskId={editedTaskId}
-                editText={editText}
-                setEditedTaskId={setEditedTaskId}
-                setEditText={setEditText}
-                handleEdit={handleEdit}
-                handleSaveEdit={handleSaveEdit}
-                handleToggle={handleToggle}
-                handleDelete={handleDelete}
-            />
+                <Snackbar
+                    open={!!successMessage}
+                    autoHideDuration={4000}
+                    onClose={() => setSuccessMessage('')}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                >
+                    <Alert
+                        onClose={() => setSuccessMessage('')}
+                        severity="success"
+                        sx={{ width: '100%' }}
+                    >
+                        {successMessage}
+                    </Alert>
+                </Snackbar>
+
+                <TaskInput
+                    newTask={newTask}
+                    setNewTask={setNewTask}
+                    handleAddTask={handleAddTask}
+                    isLoading={isLoading}
+                />
+
+                {isLoading ? (
+                    <ListSkeleton count={ITEMS_PER_PAGE} />
+                ) : (
+                    <TaskList
+                        tasks={tasks}
+                        editedTaskId={editedTaskId}
+                        editText={editText}
+                        setEditedTaskId={setEditedTaskId}
+                        setEditText={setEditText}
+                        handleCancel={handleCancel}
+                        handleEdit={handleEdit}
+                        handleSaveEdit={handleSaveEdit}
+                        handleToggle={handleToggle}
+                        handleDelete={handleDelete}
+                    />
+                )}
+            </StyledPaper>
         </Container>
     );
 };
 
-export default ToDoList;
+export default Todo;
