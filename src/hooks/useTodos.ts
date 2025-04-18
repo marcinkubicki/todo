@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
     fetchTodos,
     addTodo,
     updateTodo,
     deleteTodo,
 } from "@/services/todoService.ts";
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { getErrorMessage } from "@/helpers/getErrorMessage";
 import { USER_ID } from "@/constants/constants";
 import { strings } from "@/constants/strings";
@@ -23,48 +24,61 @@ interface ITodoHook {
 }
 
 export const useTodos = (): ITodoHook => {
-    const [tasks, setTasks] = useState<TTask[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
     const tempIdCounter = useRef(-1);
 
-    useEffect(() => {
-        async function getList() {
-            setIsLoading(true);
+    const queryClient = useQueryClient();
+
+    const {data: tasks = [], isLoading } = useQuery({
+        queryKey: ['tasks'],
+        queryFn: async () => {
             try {
                 const todos = await fetchTodos();
-                setTasks(todos);
+
                 setSuccessMessage(strings.fetchTasksSuccess);
+                return todos;
             } catch (error: unknown) {
                 setError(getErrorMessage(error));
-            } finally {
-                setIsLoading(false);
             }
         }
+     })
 
-        getList();
-    }, []);
+    const updateTasksLocally = (updater: (prev: TTask[]) => TTask[]) => {
+        queryClient.setQueryData<TTask[]>(['tasks'], old => updater(old ?? []));
+    };
+
+    const addMutation = useMutation<TTask | undefined, Error, string>({
+        mutationFn: async (title: string) => {
+            const tempId = tempIdCounter.current--;
+            const newTask: TTask = {
+                id: tempId,
+                title,
+                completed: false,
+                userId: USER_ID,
+            };
+
+            updateTasksLocally(prev => [newTask, ...prev]);
+
+            try {
+                const added = await addTodo(newTask);
+                setSuccessMessage(strings.addTaskSuccess);
+
+                return added;
+            } catch (error: unknown) {
+                updateTasksLocally(prev =>
+                   prev.filter(task => task.id !== tempId)
+                );
+                setError(getErrorMessage(error));
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['tasks']})
+        }
+    })
 
     const handleAdd = async (title: string) => {
-        const tempId = tempIdCounter.current--;
-        const newTask: TTask = {
-            id: tempId,
-            title,
-            completed: false,
-            userId: USER_ID,
-        };
-
-        setTasks(prev => [newTask, ...prev]);
-
-        try {
-            const added = await addTodo(newTask);
-            setTasks(prev => prev.map(task => task.id === tempId ? added : task));
-            setSuccessMessage(strings.addTaskSuccess);
-        } catch (error: unknown) {
-            setTasks(prev => prev.filter(task => task.id !== tempId));
-            setError(getErrorMessage(error));
-        }
+        await addMutation.mutateAsync(title);
     };
 
     const handleUpdate = async (id: number, updates: Partial<TTask>) => {
@@ -72,17 +86,18 @@ export const useTodos = (): ITodoHook => {
 
         if (!prevTask) return;
 
-        setTasks(prev =>
-            prev.map(task => task.id === id ? { ...task, ...updates } : task)
+        updateTasksLocally(prev =>
+           prev.map(task => task.id === id ? { ...task, ...updates } : task)
         );
 
         try {
             await updateTodo(id, { ...prevTask, ...updates });
             setSuccessMessage(strings.updateTaskSuccess);
         } catch (error: unknown) {
-            setTasks(prev =>
-                prev.map(task => task.id === id ? prevTask : task)
+            updateTasksLocally(prev =>
+               prev.map(task => task.id === id ? prevTask : task)
             );
+
             setError(getErrorMessage(error));
         }
     };
@@ -92,13 +107,15 @@ export const useTodos = (): ITodoHook => {
 
         if (!toDelete) return;
 
-        setTasks(prev => prev.filter(task => task.id !== id));
+        updateTasksLocally(prev =>
+           prev.filter(task => task.id !== id)
+        );
 
         try {
             await deleteTodo(id);
             setSuccessMessage(strings.deleteTaskSuccess);
         } catch (error: unknown) {
-            setTasks(prev => [...prev, toDelete]);
+            updateTasksLocally(prev => [...prev, toDelete]);
             setError(getErrorMessage(error));
         }
     };

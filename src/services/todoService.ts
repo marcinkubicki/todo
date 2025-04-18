@@ -14,7 +14,7 @@ export const fetchTodos = async (): Promise<TTask[]> => {
 
 export const addTodo = async (task: Partial<TTask>, ): Promise<TTask> => {
     const idempotencyKey = `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const response = await fetch(API_URL, {
+    const response = await fetch(`${API_URL}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
